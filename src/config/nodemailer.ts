@@ -7,7 +7,7 @@ const transporter = nodemailer.createTransport({
   //@ts-ignore
   host: configEnv.SMTP_HOST,
   port: configEnv.SMTP_PORT,
-  secure: configEnv.SMTP_SECURE === "true",
+  secure: configEnv.SMTP_SECURE === "true" ? true : false,
   auth: {
     user: configEnv.SMTP_USER,
     pass: configEnv.SMTP_PASS,

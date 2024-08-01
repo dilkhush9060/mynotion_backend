@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 import { logger } from "@/config";
 import { globalErrorHandle } from "@/api/middlewares";
 
+import { authRoutes } from "@/api/routes";
+
 function configureApp(app: express.Application) {
   // express json and urlencoded
   app.use(express.json());
@@ -17,7 +19,7 @@ function configureApp(app: express.Application) {
   // cors
   app.use(
     cors({
-      origin: ["http://localhost:3000", "*"],
+      origin: ["http://localhost:3000", "https://mynotion-two.vercel.app"],
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       preflightContinue: true,
       optionsSuccessStatus: 204,
@@ -35,6 +37,7 @@ function configureApp(app: express.Application) {
   app.use(compression());
 
   // routes
+  app.use("/api/auth", authRoutes);
 
   //
   // health check

@@ -1,0 +1,79 @@
+import { authService } from "@/services";
+import { HttpError, InternalServerError, ZodHttpError } from "@/api/errors";
+import { AppRequest, AppResponse, AppNextFunction } from "@/types";
+import { SignInSchema, SignUpSchema } from "../schema";
+
+class AuthController {
+  // sign up
+  public async signUp(
+    req: AppRequest,
+    res: AppResponse,
+    next: AppNextFunction
+  ) {
+    const { data, error } = SignUpSchema.safeParse(req.body);
+
+    if (error) {
+      return next(new ZodHttpError(error));
+    }
+
+    const response = await authService.signUp(
+      data.name,
+      data.email,
+      data.phone,
+      data.password
+    );
+
+    if (response.statusCode === 201) {
+      return res.status(201).json({
+        statusCode: response.statusCode,
+        message: response.message,
+        data: response.data,
+      });
+    } else {
+      return next(new HttpError(response.message!, response.statusCode));
+    }
+  }
+
+  // sign in
+  public async signIn(
+    req: AppRequest,
+    res: AppResponse,
+    next: AppNextFunction
+  ) {
+    const { data, error } = SignInSchema.safeParse(req.body);
+
+    if (error) {
+      return next(new ZodHttpError(error));
+    }
+
+    const response = await authService.signIn(data.email, data.password);
+
+    if (response.statusCode === 200) {
+      // set cookies
+      if (response.data) {
+        res.cookie("accessToken", response.data.accessToken, {
+          maxAge: 1000 * 60 * 60 * 24,
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+        res.cookie("refreshToken", response.data.refreshToken, {
+          maxAge: 1000 * 60 * 60 * 24 * 3,
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+      }
+
+      return res.status(200).json({
+        statusCode: response.statusCode,
+        message: response.message,
+        data: response.data,
+      });
+    } else {
+      return next(new HttpError(response.message!, response.statusCode));
+    }
+  }
+}
+
+export const authController = new AuthController();
