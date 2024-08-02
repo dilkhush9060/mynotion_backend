@@ -235,6 +235,7 @@ class AuthService implements IAuthService {
         statusCode: 200,
         message: "Sign in success",
         data: {
+          id: user.id,
           name: user.name,
           email: user.email,
           avatar: user.avatar,
