@@ -1,5 +1,5 @@
 import { authService } from "@/services";
-import { HttpError, InternalServerError, ZodHttpError } from "@/api/errors";
+import { HttpError, ZodHttpError } from "@/api/errors";
 import { AppRequest, AppResponse, AppNextFunction } from "@/types";
 import { EmailSchema, OtpSchema, SignInSchema, SignUpSchema } from "../schema";
 
@@ -24,6 +24,15 @@ class AuthController {
     );
 
     if (response.statusCode === 201) {
+      if (response.data) {
+        res.cookie("token", response.data.token, {
+          maxAge: 1000 * 60 * 60,
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+      }
+
       return res.status(201).json({
         statusCode: response.statusCode,
         message: response.message,
@@ -87,6 +96,9 @@ class AuthController {
     );
 
     if (response.statusCode === 200) {
+      // clear cookies
+      res.clearCookie("token");
+
       return res.status(200).json({
         statusCode: response.statusCode,
         message: response.message,

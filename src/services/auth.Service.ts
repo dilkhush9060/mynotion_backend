@@ -89,7 +89,7 @@ class AuthService implements IAuthService {
       // check user is verified
       if (user.isVerified) {
         return {
-          statusCode: 401,
+          statusCode: 400,
           message: "User is already verified",
         };
       }
