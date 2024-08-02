@@ -70,6 +70,28 @@ class Helpers {
     const emailBody = mailGenerator.generate(email);
     return emailBody;
   }
+
+  // forgot password mail template
+  async sendForgotPasswordMail(name: string, otp: string) {
+    const email = {
+      body: {
+        name,
+        intro: "Reset your password",
+        action: {
+          instructions: "Please click the button below to reset your password.",
+          button: {
+            color: "#22BC66",
+            text: otp,
+            link:
+              "https://mynotion-two.vercel.app/auth/password/reset?otp=" + otp,
+          },
+          outro: "If you didn't request this email, please ignore it.",
+        },
+      },
+    };
+    const emailBody = mailGenerator.generate(email);
+    return emailBody;
+  }
 }
 
 export const helpers = new Helpers();

@@ -12,5 +12,7 @@ router.post(
   tokenMiddleware,
   authController.emailVerificationComplete
 );
+router.post("/password/forgot", authController.forgotPassword);
+router.post("/password/reset", tokenMiddleware, authController.resetPassword);
 
 export { router as authRoutes };

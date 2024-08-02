@@ -250,5 +250,107 @@ class AuthService implements IAuthService {
       };
     }
   }
+
+  // forgot password
+  public async forgotPassword(email: string) {
+    try {
+      // check user exist
+      const user = await userRepository.getUserByEmail(email);
+
+      if (!user) {
+        return {
+          statusCode: 404,
+          message: "User not found",
+        };
+      }
+
+      // generate otp
+      const otp = await helpers.generateOtp();
+
+      // create token
+      const token = await helpers.createJwtToken(
+        {
+          email: email,
+        },
+        configEnv.REFRESH_TOKEN_SECRET,
+        "1h"
+      );
+
+      // update user
+      const updatedUser = await userRepository.updateUserByEmail(email, {
+        otp: otp,
+        token: token,
+      });
+
+      // sned mail
+      const mailBody = await helpers.sendForgotPasswordMail(user.name, otp);
+
+      await sendMailByNodeMailer({
+        to: email,
+        subject: "Reset your password",
+        mailBody: mailBody,
+      });
+
+      return {
+        statusCode: 200,
+        message: "Send forgot password mail success",
+        data: {
+          email: user.email,
+          token,
+        },
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        error,
+      };
+    }
+  }
+
+  // reset password
+  public async resetPassword(email: string, otp: string, password: string) {
+    try {
+      // check user exist
+      const user = await userRepository.getUserByEmail(email);
+
+      if (!user) {
+        return {
+          statusCode: 404,
+          message: "User not found",
+        };
+      }
+
+      // check otp
+      if (user.otp !== otp) {
+        return {
+          statusCode: 401,
+          message: "Invalid otp",
+        };
+      }
+
+      // hash password
+      const hashedPassword = await helpers.createBcryptHash(password);
+
+      // update user
+      const updatedUser = await userRepository.updateUserByEmail(email, {
+        password: hashedPassword,
+        otp: null,
+        token: null,
+      });
+
+      return {
+        statusCode: 200,
+        message: "Reset password success",
+        data: {
+          email: updatedUser.email,
+        },
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        error,
+      };
+    }
+  }
 }
 export const authService = new AuthService();

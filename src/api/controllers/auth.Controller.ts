@@ -1,7 +1,13 @@
 import { authService } from "@/services";
 import { HttpError, ZodHttpError } from "@/api/errors";
 import { AppRequest, AppResponse, AppNextFunction } from "@/types";
-import { EmailSchema, OtpSchema, SignInSchema, SignUpSchema } from "../schema";
+import {
+  EmailSchema,
+  OtpSchema,
+  ResetPasswordSchema,
+  SignInSchema,
+  SignUpSchema,
+} from "../schema";
 
 class AuthController {
   // sign up
@@ -139,6 +145,73 @@ class AuthController {
           secure: true,
         });
       }
+
+      return res.status(200).json({
+        statusCode: response.statusCode,
+        message: response.message,
+        data: response.data,
+      });
+    } else {
+      return next(new HttpError(response.message!, response.statusCode));
+    }
+  }
+
+  // forgot password
+  public async forgotPassword(
+    req: AppRequest,
+    res: AppResponse,
+    next: AppNextFunction
+  ) {
+    const { data, error } = EmailSchema.safeParse(req.body);
+
+    if (error) {
+      return next(new ZodHttpError(error));
+    }
+
+    const response = await authService.forgotPassword(data.email);
+
+    if (response.statusCode === 200) {
+      if (response.data) {
+        res.cookie("token", response.data.token, {
+          maxAge: 1000 * 60 * 60,
+          httpOnly: true,
+          sameSite: "none",
+          secure: true,
+        });
+      }
+
+      return res.status(200).json({
+        statusCode: response.statusCode,
+        message: response.message,
+        data: response.data,
+      });
+    } else {
+      return next(new HttpError(response.message!, response.statusCode));
+    }
+  }
+
+  // reset password
+  public async resetPassword(
+    req: AppRequest,
+    res: AppResponse,
+    next: AppNextFunction
+  ) {
+    const tokenData: any = req.tokenData;
+    // data validation
+    const { data, error } = ResetPasswordSchema.safeParse(req.body);
+    if (error) {
+      return next(new ZodHttpError(error));
+    }
+
+    const response = await authService.resetPassword(
+      tokenData.email,
+      data.otp,
+      data.password
+    );
+
+    if (response.statusCode === 200) {
+      // clear cookies
+      res.clearCookie("token");
 
       return res.status(200).json({
         statusCode: response.statusCode,
