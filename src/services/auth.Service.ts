@@ -1,6 +1,6 @@
 import { IAuthService } from "@/types/services";
 import { userRepository } from "@/repositories";
-import { configEnv, helpers } from "@/config";
+import { configEnv, helpers, sendMailByNodeMailer } from "@/config";
 
 class AuthService implements IAuthService {
   // sign up
@@ -48,6 +48,13 @@ class AuthService implements IAuthService {
       const newUser = await userRepository.createUser(userData);
 
       // Todo: send email verification
+      const mailBody = await helpers.sendVerificationMail(name, otp);
+
+      await sendMailByNodeMailer({
+        to: email,
+        subject: "Verify your email",
+        mailBody: mailBody,
+      });
 
       return {
         statusCode: 201,
@@ -65,6 +72,58 @@ class AuthService implements IAuthService {
       };
     }
   }
+
+  // email verification start
+  public async sendVerificationMail(email: string) {
+    try {
+      // check user exist
+      const user = await userRepository.getUserByEmail(email);
+
+      if (!user) {
+        return {
+          statusCode: 404,
+          message: "User not found",
+        };
+      }
+
+      // generate otp
+      const otp = await helpers.generateOtp();
+
+      // create token
+      const token = await helpers.createJwtToken(
+        {
+          email: email,
+        },
+        configEnv.REFRESH_TOKEN_SECRET,
+        "1h"
+      );
+
+      // sned mail
+      const mailBody = await helpers.sendVerificationMail(user.name, otp);
+
+      await sendMailByNodeMailer({
+        to: email,
+        subject: "Verify your email",
+        mailBody: mailBody,
+      });
+
+      return {
+        statusCode: 200,
+        message: "Send verification mail success",
+        data: {
+          email: user.email,
+          token,
+        },
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        error,
+      };
+    }
+  }
+
+  // email verification complete
 
   // sign in
   public async signIn(email: string, password: string) {

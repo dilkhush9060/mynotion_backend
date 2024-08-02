@@ -1,16 +1,16 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import { randomBytes } from "crypto";
 import Mailgen from "mailgen";
 
 const mailGenerator = new Mailgen({
-  theme: "default",
+  theme: "salted",
   product: {
     name: "My Notion",
     link: "https://mynotion-two.vercel.app",
     logo: "https://mynotion-two.vercel.app/favicon.ico",
     copyright: `Copyright © ${new Date().getFullYear()} My Notion`,
-    logoHeight: "60",
+    logoHeight: "80",
   },
   textDirection: "ltr",
 });
@@ -41,8 +41,10 @@ class Helpers {
   }
 
   generateOtp() {
-    const otp = crypto.randomBytes(6).toString("hex");
-    return otp;
+    const otp = randomBytes(3).toString("hex");
+    const otpNum = parseInt(otp, 16) % 1000000;
+    const paddedOtp = otpNum.toString().padStart(6, "0");
+    return paddedOtp;
   }
 
   // user verification mail template
@@ -51,9 +53,17 @@ class Helpers {
       body: {
         name,
         intro: "Welcome to My Notion",
-        otp,
-        link: "https://mynotion-two.vercel.app/auth/email/verify",
-        outro: "If you didn't request this email, please ignore it.",
+        action: {
+          instructions:
+            "Please click the button below to verify your email address.",
+          button: {
+            color: "#22BC66",
+            text: otp,
+            link:
+              "https://mynotion-two.vercel.app/auth/email/verify?otp=" + otp,
+          },
+          outro: "If you didn't request this email, please ignore it.",
+        },
       },
     };
 

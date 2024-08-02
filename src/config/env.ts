@@ -20,7 +20,6 @@ const _configEnv = {
   SMTP_PORT: process.env.SMTP_PORT || 465,
   SMTP_USER: process.env.SMTP_USER || "",
   SMTP_PASS: process.env.SMTP_PASS || "",
-  SMTP_FROM: process.env.SMTP_FROM || "kiteinst@gmail.com",
   SMTP_SECURE: process.env.SMTP_SECURE || "false",
 };
 

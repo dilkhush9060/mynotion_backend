@@ -16,25 +16,24 @@ const transporter = nodemailer.createTransport({
 
 export const sendMailByNodeMailer = async ({
   to,
-  from,
   subject,
   mailBody,
 }: {
   to?: string;
-  from?: string;
   subject: string;
   mailBody: any;
 }) => {
   const mailOptions = {
-    from: from || configEnv.SMTP_FROM,
-    to: to || configEnv.SMTP_FROM,
-    subject,
+    from: "My Notion <noreply@mynotion.com>",
+    to: to || "",
+    subject: subject,
     html: mailBody,
   };
   try {
     await transporter.sendMail(mailOptions);
     logger.info("Mail sent successfully");
   } catch (error: any) {
+    console.log(error);
     logger.error(error.message);
     throw new InternalServerError(error.message, error);
   }
