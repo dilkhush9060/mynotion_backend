@@ -7,7 +7,7 @@ export type AppNextFunction = NextFunction;
 declare global {
   namespace Express {
     interface Request {
-      token?: string;
+      tokenData?: object;
       user?: {
         id: string;
         role: string;

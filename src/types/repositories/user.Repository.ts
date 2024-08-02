@@ -47,6 +47,8 @@ export interface IUpdateUser {
 
   role?: string;
 
+  isVerified?: boolean;
+
   token?: string | null;
   otp?: string | null;
 }

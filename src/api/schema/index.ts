@@ -25,3 +25,14 @@ export const EmailSchema = z.object({
     message: "Invalid email",
   }),
 });
+
+export const OtpSchema = z.object({
+  otp: z
+    .string({ required_error: "Otp is required" })
+    .min(4, {
+      message: "Otp must be at least 4 characters",
+    })
+    .max(6, {
+      message: "Otp must be at most 6 characters",
+    }),
+});

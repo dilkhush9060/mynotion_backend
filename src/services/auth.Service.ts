@@ -86,6 +86,14 @@ class AuthService implements IAuthService {
         };
       }
 
+      // check user is verified
+      if (user.isVerified) {
+        return {
+          statusCode: 401,
+          message: "User is already verified",
+        };
+      }
+
       // generate otp
       const otp = await helpers.generateOtp();
 
@@ -97,6 +105,12 @@ class AuthService implements IAuthService {
         configEnv.REFRESH_TOKEN_SECRET,
         "1h"
       );
+
+      // update user
+      const updatedUser = await userRepository.updateUserByEmail(email, {
+        otp: otp,
+        token: token,
+      });
 
       // sned mail
       const mailBody = await helpers.sendVerificationMail(user.name, otp);
@@ -124,6 +138,47 @@ class AuthService implements IAuthService {
   }
 
   // email verification complete
+  public async emailVerificationComplete(email: string, otp: string) {
+    try {
+      // check user exist
+      const user = await userRepository.getUserByEmail(email);
+
+      if (!user) {
+        return {
+          statusCode: 404,
+          message: "User not found",
+        };
+      }
+
+      // check otp
+      if (user.otp !== otp) {
+        return {
+          statusCode: 401,
+          message: "Invalid otp",
+        };
+      }
+
+      // update user
+      const updatedUser = await userRepository.updateUserByEmail(email, {
+        isVerified: true,
+        otp: null,
+        token: null,
+      });
+
+      return {
+        statusCode: 200,
+        message: "Email verification complete",
+        data: {
+          email: updatedUser.email,
+        },
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        error,
+      };
+    }
+  }
 
   // sign in
   public async signIn(email: string, password: string) {

@@ -1,7 +1,7 @@
 import { authService } from "@/services";
 import { HttpError, InternalServerError, ZodHttpError } from "@/api/errors";
 import { AppRequest, AppResponse, AppNextFunction } from "@/types";
-import { EmailSchema, SignInSchema, SignUpSchema } from "../schema";
+import { EmailSchema, OtpSchema, SignInSchema, SignUpSchema } from "../schema";
 
 class AuthController {
   // sign up
@@ -58,6 +58,35 @@ class AuthController {
         });
       }
 
+      return res.status(200).json({
+        statusCode: response.statusCode,
+        message: response.message,
+        data: response.data,
+      });
+    } else {
+      return next(new HttpError(response.message!, response.statusCode));
+    }
+  }
+
+  // email verification complete
+  public async emailVerificationComplete(
+    req: AppRequest,
+    res: AppResponse,
+    next: AppNextFunction
+  ) {
+    const tokenData: any = req.tokenData;
+    // data validation
+    const { data, error } = OtpSchema.safeParse(req.body);
+    if (error) {
+      return next(new ZodHttpError(error));
+    }
+
+    const response = await authService.emailVerificationComplete(
+      tokenData.email,
+      data.otp
+    );
+
+    if (response.statusCode === 200) {
       return res.status(200).json({
         statusCode: response.statusCode,
         message: response.message,
