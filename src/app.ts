@@ -39,7 +39,6 @@ function configureApp(app: express.Application) {
   // routes
   app.use("/api/auth", authRoutes);
 
-  //
   // health check
   app.get("/", async (req, res, next) => {
     res.status(200).json({
